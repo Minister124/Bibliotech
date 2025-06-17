@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Bibliotech.Core/Bibliotech.Core.csproj" />
+    <ProjectReference Include="../Bibliotech.Modules.Transactions.Domain/Bibliotech.Modules.Transactions.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Commands/" />
+    <Folder Include="Queries/" />
+    <Folder Include="Handlers/" />
+    <Folder Include="Services/" />
+    <Folder Include="Interfaces/" />
+    <Folder Include="DTOs/" />
+    <Folder Include="Validators/" />
+    <Folder Include="Behaviours/" />
+  </ItemGroup>
+
+</Project>
