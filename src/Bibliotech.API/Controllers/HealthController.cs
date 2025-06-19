@@ -1,5 +1,8 @@
+using Bibliotech.Core.Models;
+using Bibliotech.Modules.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
 
 namespace Bibliotech.API.Controllers
 {
@@ -25,11 +28,11 @@ namespace Bibliotech.API.Controllers
             {
                 var canConnectToPostgres = await _dbContext.Database.CanConnectAsync();
 
-                var mongoCollections = await _mongoContext.ReadingSessions.CountDocumentAsync(FilterDefinition<ReadingSession>.Empty);
+                var mongoCollections = await _mongoContext.ReadingSessions.CountDocumentsAsync(FilterDefinition<ReadingSession>.Empty);
 
                 return Ok(new
                 {
-                    PostgreSQL = canConnectToPostgres ? "Connected" : "Failed", 
+                    PostgreSQL = canConnectToPostgres ? "Connected" : "Failed",
                     MongoDB = "Connected",
                     Timestamp = DateTime.UtcNow
                 });

@@ -3,8 +3,6 @@ using Bibliotech.Core.Repositories;
 using Bibliotech.Modules.Infrastructure.Data;
 using Bibliotech.Modules.Infrastructure.Repositories;
 using Bibliotech.Modules.Infrastructure.Scripts;
-using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -55,14 +53,11 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IReadingSessionRepository, ReadingSessionRepository>();
 
 builder.Services.AddHealthChecks()
-    .AddNpgSql
-    (
+    .AddNpgSql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
         name: "postgresql",
         tags: new[] { "database", "postgresql" }
-    )
-    .AddMongoDb
-    (
+    ).AddMongoDb(
         builder.Configuration.GetConnectionString("MongoDb")!,
         name: "mongodb",
         tags: new[] { "database", "mongodb" }
@@ -76,21 +71,6 @@ if (app.Environment.IsDevelopment())
     var mongoContext = scope.ServiceProvider.GetRequiredService<MongoDBContext>();
     await MongoDbInitializer.InitializeAsync(mongoContext);
 }
-
-app.MapHealthChecks("/health", new HealthCheckOptions {
-    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-});
-
-app.MapHealthChecks("/health/ready", new HealthCheckOptions {
-    Predicate = check => check.Tags.Contains("ready")
-});
-
-app.MapHealthChecks("/health/live", new HealthCheckOptions
-{
-    Predicate = _ => false
-});
-
-app.UseHttpsRedirection();
 
 app.Run();
 
