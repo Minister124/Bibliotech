@@ -14,5 +14,5 @@ public interface IUserRepository
           Task AddAsync(User user, CancellationToken cancellationToken = default);
           Task UpdateAsync(User user, CancellationToken cancellationToken = default);
           Task DeleteAsync(User user, CancellationToken cancellationToken = default);
-          Task<IEnumerable<User>> GetActiveUsersAsync(int pageNumber, int PageSize, CancellationToken cancellationToken = default);
+          Task<IEnumerable<User>> GetActiveUsersAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default);
 }
