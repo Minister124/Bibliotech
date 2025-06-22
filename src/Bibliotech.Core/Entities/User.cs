@@ -5,7 +5,7 @@ using Bibliotech.Core.ValueObjects;
 
 namespace Bibliotech.Core.Entities;
 
-public class User : AggregateRoot<UserId> , IAuditableEntity
+public class User : AggregateRoot<UserId>, IAuditableEntity
 {
           public string Email { get; private set; } = string.Empty;
           public string PasswordHash { get; private set; } = string.Empty;
@@ -22,6 +22,8 @@ public class User : AggregateRoot<UserId> , IAuditableEntity
           public DateTime? UpdatedAt { get; private set; }
           public string? CreatedBy { get; private set; }
           public string? UpdatedBy { get; private set; }
+
+          public List<string> Roles { get; private set; } = new();
 
           private User() { }//Constructor for EF Core
 
@@ -59,6 +61,31 @@ public class User : AggregateRoot<UserId> , IAuditableEntity
           {
                     LastActiveDate = DateTime.UtcNow;
                     UpdatedAt = DateTime.UtcNow;
+          }
+
+          public void AddRole(string role)
+          {
+                    if (!Roles.Contains(role))
+                    {
+                              Roles.Add(role);
+                              UpdatedAt = DateTime.UtcNow;
+                              AddDomainEvent(new UserRoleAddedEvent(Id, role));
+                    }
+          }
+
+          public void RemoveRole(string role)
+          {
+                    if (Roles.Contains(role))
+                    {
+                              Roles.Remove(role);
+                              UpdatedAt = DateTime.UtcNow;
+                              AddDomainEvent(new UserRoleRemovedEvent(Id, role));
+                    }
+          }
+
+          public bool HasROle(string role)
+          {
+                    return Roles.Contains(role);
           }
 }
 
