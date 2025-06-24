@@ -83,9 +83,24 @@ public class User : AggregateRoot<UserId>, IAuditableEntity
                     }
           }
 
-          public bool HasROle(string role)
+          public bool HasRole(string role)
           {
                     return Roles.Contains(role);
+          }
+
+          public void ResetPassword(string newPasswordHash)
+          {
+                    PasswordHash = newPasswordHash;
+                    PasswordResetToken = null;
+                    PasswordResetTokenExpiry = null;
+                    UpdatedAt = DateTime.UtcNow;
+          }
+
+          public void resetPasswordToken(TimeSpan? expiry = null)
+          {
+                    PasswordResetToken = Guid.NewGuid().ToString();
+                    PasswordResetTokenExpiry = DateTime.UtcNow.Add(expiry ?? TimeSpan.FromHours(1));
+                    UpdatedAt = DateTime.UtcNow;
           }
 }
 

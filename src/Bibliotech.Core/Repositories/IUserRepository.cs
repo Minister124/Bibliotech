@@ -7,6 +7,8 @@ namespace Bibliotech.Core.Repositories;
 public interface IUserRepository
 {
           Task<User?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default);
+
+          Task<bool> AnyUsers();
           Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
           Task<User?> GetByEmailVerificationTokenAsync(string token, CancellationToken cancellationToken = default);
           Task<User?> GetByPasswordResetTokenAsync(string token, CancellationToken cancellationToken = default);

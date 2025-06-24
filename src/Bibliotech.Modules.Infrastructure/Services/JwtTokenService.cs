@@ -49,7 +49,7 @@ public class JwtTokenService : IJwtTokenService
                     var tokenDescriptor = new SecurityTokenDescriptor
                     {
                               Subject = new ClaimsIdentity(claims),
-                              Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationDays),
+                              Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
                               Issuer = _jwtSettings.Issuer,
                               Audience = _jwtSettings.Audience,
                               SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
