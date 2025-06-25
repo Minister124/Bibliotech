@@ -1,6 +1,7 @@
 using System;
 using Bibliotech.Core.Abstractions;
 using Bibliotech.Core.Entities;
+using Bibliotech.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bibliotech.Modules.Infrastructure.Data;
@@ -13,6 +14,8 @@ public class BibliotechDbContext : DbContext
           }
 
           public DbSet<User> Users { get; set; } = null!;
+
+          public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
           protected override void OnModelCreating(ModelBuilder modelBuilder)
           {

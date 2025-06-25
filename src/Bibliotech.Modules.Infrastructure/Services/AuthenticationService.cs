@@ -228,7 +228,7 @@ public class AuthenticationService : IAuthenticationService
                     
                     await _userRepository.UpdateAsync(user);
 
-                    await _refreshToken.RemoveAllUserTokenAsync(user.Id.Value.ToString());
+                    await _refreshToken.RevokeAllUserTokenAsync(user.Id.Value.ToString());
 
                     return true;
           }
