@@ -29,12 +29,14 @@ builder.Services.AddDbContext<BibliotechDbContext>(options =>
         );
     });
 
-    if(builder.Environment.IsDevelopment())
+    if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging();
         options.EnableDetailedErrors();
     }
 });
+
+builder.Services.AddControllers();
 
 builder.Services.AddSingleton<IMongoClient>
 (
@@ -126,6 +128,8 @@ if (app.Environment.IsDevelopment())
     var mongoContext = scope.ServiceProvider.GetRequiredService<MongoDBContext>();
     await MongoDbInitializer.InitializeAsync(mongoContext);
 }
+
+app.MapControllers();
 
 app.Run();
 
