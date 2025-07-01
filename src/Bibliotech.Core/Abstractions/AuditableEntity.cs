@@ -29,7 +29,7 @@ public abstract class AuditableEntity<T> : Entity<T>, IAuditableEntity
                               CreatedBy = createdBy;
                     }
 
-                    if (UpdatedBy != null)
+                    if (updatedBy != null)
                     {
                               UpdatedBy = updatedBy;
                               UpdatedAt = DateTime.UtcNow;

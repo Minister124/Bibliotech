@@ -42,7 +42,7 @@ public class AuthenticationService : IAuthenticationService
 
                     if (user == null) return false;
 
-                    user.resetPasswordToken();
+                    user.ResetPasswordToken();
                     await _userRepository.UpdateAsync(user);
 
                     //TODO: Send email with reset token

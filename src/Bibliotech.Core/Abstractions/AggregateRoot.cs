@@ -1,4 +1,5 @@
 using System;
+using MediatR;
 
 namespace Bibliotech.Core.Abstractions;
 
@@ -41,7 +42,7 @@ public abstract class AuditableAggregateRoot<T> : AuditableEntity<T>
           }
 }
 
-public interface IDomainEvent
+public interface IDomainEvent : INotification
 {
           DateTime OccurredOn {get;}
 }
