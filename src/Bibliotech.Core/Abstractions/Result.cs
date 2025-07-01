@@ -29,9 +29,9 @@ public class Result<T> : Result
 
           protected Result(T? value, bool isSuccess, string error, string[] errors)
                     : base(isSuccess, error, errors)
-                    {
-                              Value = value
-                    }
+          {
+                    Value = value;
+          }
 
           public static Result<T> Success(T value) => new(value, true, string.Empty, Array.Empty<string>());
           public static new Result<T> Failure(string error) => new(default, false, error, new[] { error });
