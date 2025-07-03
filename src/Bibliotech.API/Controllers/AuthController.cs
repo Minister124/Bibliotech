@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Bibliotech.Core.Services;
 using Bibliotech.Core.ValueObjects;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +15,13 @@ namespace Bibliotech.API.Controllers
         private readonly IAuthenticationService _authenticationService;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthenticationService authenticationService, ILogger<AuthController> logger)
+        private readonly IMediator _mediator;
+
+        public AuthController(IAuthenticationService authenticationService, ILogger<AuthController> logger, IMediator mediator)
         {
             _authenticationService = authenticationService;
             _logger = logger;
+            _mediator = mediator;
         }
 
         [HttpPost("register")]

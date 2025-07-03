@@ -1,11 +1,16 @@
+using System.Reflection;
 using System.Text;
+using Bibliotech.Core.Commands;
 using Bibliotech.Core.Configuration;
 using Bibliotech.Core.Repositories;
 using Bibliotech.Core.Services;
+using Bibliotech.Modules.Infrastructure.Behaviors;
 using Bibliotech.Modules.Infrastructure.Data;
 using Bibliotech.Modules.Infrastructure.Repositories;
 using Bibliotech.Modules.Infrastructure.Scripts;
 using Bibliotech.Modules.Infrastructure.Services;
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -115,10 +120,71 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireEmailVerified", policy => policy.RequireClaim("emailVerified", "True"));
 });
 
+var moduleAssemblies = new[]
+{
+    "Bibliotech.Modules.Discovery.Application",
+    "Bibliotech.Modules.Community.Application",
+    "Bibliotech.Modules.Transactions.Application",
+    "Bibliotech.Modules.Enterprise.Application"
+};
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Bibliotech.Core.Abstractions.ICommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(BibliotechDbContext).Assembly);
+
+    foreach (var assemblyName in moduleAssemblies)
+    {
+        try
+        {
+            var assembly = Assembly.Load(assemblyName);
+            cfg.RegisterServicesFromAssembly(assembly);
+        }
+        catch (FileNotFoundException)
+        {
+            // It is expected that some module assemblies may not be present depending on deployment configuration.
+            // This is safe in both development and production; missing assemblies are simply skipped.
+        }
+        catch (BadImageFormatException ex)
+        {
+            // Log or handle BadImageFormatException
+            Console.WriteLine($"Failed to load assembly '{assemblyName}': {ex.Message}");
+        }
+        catch (FileLoadException ex)
+        {
+            // Log or handle FileLoadException
+            Console.WriteLine($"Failed to load assembly '{assemblyName}': {ex.Message}");
+        }
+    }
+});
+
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+// Adding pipeline behaviors in order
+builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(DomainEventBehavior<,>));
+
+builder.Services.AddValidatorsFromAssembly(typeof(CreateUserCommandValidator).Assembly);
+
+foreach (var assemblyName in moduleAssemblies)
+{
+    try
+    {
+        var assembly = Assembly.Load(assemblyName);
+        builder.Services.AddValidatorsFromAssembly(assembly);
+    }
+    catch (FileNotFoundException)
+    {
+        // It is expected that some module assemblies may not be present depending on deployment configuration.
+        // This is safe in both development and production; missing assemblies are simply skipped.
+    }
+}
 
 var app = builder.Build();
 
