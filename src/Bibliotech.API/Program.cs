@@ -1,11 +1,15 @@
 using System.Reflection;
 using System.Text;
+using Bibliotech.Core.Abstractions;
 using Bibliotech.Core.Commands;
+using Bibliotech.Core.Commands.Auth;
 using Bibliotech.Core.Configuration;
 using Bibliotech.Core.Repositories;
 using Bibliotech.Core.Services;
+using Bibliotech.Core.Validators.Auth;
 using Bibliotech.Modules.Infrastructure.Behaviors;
 using Bibliotech.Modules.Infrastructure.Data;
+using Bibliotech.Modules.Infrastructure.Handlers.Auth;
 using Bibliotech.Modules.Infrastructure.Repositories;
 using Bibliotech.Modules.Infrastructure.Scripts;
 using Bibliotech.Modules.Infrastructure.Services;
@@ -164,13 +168,15 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
+builder.Services.AddScoped<ICommandHandler<LoginCommand, Result<LoginResponse>>, LoginCommandHandler>();
+builder.Services.AddScoped<ICommandHandler<RegisterCommand, Result<RegisterResponse>>, RegisterCommandHandler>();
+
 // Adding pipeline behaviors in order
 builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
 builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(DomainEventBehavior<,>));
 
-builder.Services.AddValidatorsFromAssembly(typeof(CreateUserCommandValidator).Assembly);
 
 foreach (var assemblyName in moduleAssemblies)
 {
@@ -185,6 +191,8 @@ foreach (var assemblyName in moduleAssemblies)
         // This is safe in both development and production; missing assemblies are simply skipped.
     }
 }
+
+builder.Services.AddValidatorsFromAssembly(typeof(LoginCommandValidator).Assembly);
 
 var app = builder.Build();
 

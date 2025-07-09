@@ -1,5 +1,5 @@
 using Bibliotech.Core.Abstractions;
-using Bibliotech.Core.Commands.Users;
+using Bibliotech.Core.Models;
 
 namespace Bibliotech.Core.Commands.Auth;
 

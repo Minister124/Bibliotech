@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Bibliotech.Core.Commands.Auth;
 using Bibliotech.Core.Services;
 using Bibliotech.Core.ValueObjects;
 using MediatR;
@@ -12,14 +13,12 @@ namespace Bibliotech.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthenticationService _authenticationService;
         private readonly ILogger<AuthController> _logger;
 
         private readonly IMediator _mediator;
 
-        public AuthController(IAuthenticationService authenticationService, ILogger<AuthController> logger, IMediator mediator)
+        public AuthController(ILogger<AuthController> logger, IMediator mediator)
         {
-            _authenticationService = authenticationService;
             _logger = logger;
             _mediator = mediator;
         }
@@ -27,12 +26,29 @@ namespace Bibliotech.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var result = await _authenticationService.RegisterAsync(request.Email, request.Password, request.FirstName, request.LastName);
+            if (!ModelState.IsValid)
+                return BadRequest(new {Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)});
 
-            if (!result.Success)
+            var command = new RegisterCommand(
+                request.Email,
+                request.Password,
+                request.FirstName,
+                request.LastName
+            );
+
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
                 return BadRequest(new { Errors = result.Errors });
 
-            return Ok(new { Message = "Registration Successful, Please verify your email", User = result.User });
+            if (result.Value == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Error = "Unexpected error occurred." });
+
+            return Ok(new
+            {
+                Message = result.Value.Message,
+                User = result.Value.User
+            });
         }
 
         [HttpPost("login")]
@@ -41,70 +57,48 @@ namespace Bibliotech.API.Controllers
             var ipAddress = GetIpAddress();
             var deviceInfo = GetDeviceInfo();
 
-            var result = await _authenticationService.LoginAsync(
-                request.Email, request.Password, ipAddress, deviceInfo
+            var command = new LoginCommand(
+                request.Email,
+                request.Password,
+                ipAddress,
+                deviceInfo
             );
 
-            if (!result.Success) return BadRequest(new { Errors = result.Errors });
+            var result = await _mediator.Send(command);
 
-            SetRefreshTokenCookie(result.RefreshToken);
+            if (!result.IsSuccess)
+                return BadRequest(new {Errors = result.Errors});
+
+            if (result.Value == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Error = "Unexpected error occurred." });
+
+            SetRefreshTokenCookie(result.Value.RefreshToken);
 
             return Ok(new
             {
-                AccessToken = result.AccessToken,
-                ExpiresAt = result.ExpiresAt,
-                User = result.User
+                AccessToken = result.Value.AccessToken,
+                ExpiresAt = result.Value.ExpiresAt,
+                User = result.Value.User
             });
         }
 
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken()
         {
-            var refreshToken = Request.Cookies["refreshToken"];
-
-            if (string.IsNullOrEmpty(refreshToken))
-                return BadRequest(new { Error = "Refresh token is missing" });
-
-            var ipAddress = GetIpAddress();
-            var result = await _authenticationService.RefreshTokenAsync(refreshToken, ipAddress);
-
-            if (!result.Success)
-                return BadRequest(new { Errors = result.Errors });
-
-            SetRefreshTokenCookie(result.RefreshToken);
-
-            return Ok(new
-            {
-                AccessToken = result.AccessToken,
-                ExpiresAt = result.ExpiresAt,
-                User = result.User
-            });
+            throw new NotImplementedException();
         }
 
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            var refreshToken = Request.Cookies["refreshToken"];
-
-            if (!string.IsNullOrEmpty(refreshToken))
-            {
-                var ipAddress = GetIpAddress();
-                await _authenticationService.RevokeTokenAsync(refreshToken, ipAddress);
-            }
-
-            Response.Cookies.Delete("refershToken");
-            return Ok(new { Message = "Logged Out Successfully"});
+            throw new NotImplementedException();
         }
 
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
-            var result = await _authenticationService.VerifyEmailAsync(request.Token);
-
-            if (!result) return BadRequest(new { Error = "Invalid verification token" });
-
-            return Ok(new { Message = "Email verified successfully" });
+            throw new NotImplementedException();
         }
 
         [HttpGet("profile")]

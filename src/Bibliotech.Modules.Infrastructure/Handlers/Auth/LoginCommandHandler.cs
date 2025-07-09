@@ -33,7 +33,7 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginRes
                               if (!authResult.Success)
                               {
                                         _logger.LogWarning("Login failed for email: {Email}", request.Email);
-                                        return Result<LoginResponse>.Failure(string.Join("; ", authResult.Errors));
+                                        return Result<LoginResponse>.Failure(authResult.Errors.ToArray());
                               }
                               
                               var response = new LoginResponse(
