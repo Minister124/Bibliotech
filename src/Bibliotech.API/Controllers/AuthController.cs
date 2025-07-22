@@ -5,6 +5,7 @@ using Bibliotech.Core.ValueObjects;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bibliotech.API.Controllers
@@ -85,20 +86,94 @@ namespace Bibliotech.API.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken()
         {
-            throw new NotImplementedException();
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(refreshToken))
+                return BadRequest(new { Error = "Refresh token is required" });
+
+            var command = new RefreshTokenCommand(refreshToken, GetIpAddress());
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
+                return BadRequest(new {Errors = result.Errors});
+
+            if (result.Value == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Error = "Unexpected error occurred." });
+
+            SetRefreshTokenCookie(result.Value.RefreshToken);
+
+            return Ok(new
+            {
+                AccessToken = result.Value.AccessToken,
+                ExpiresAt = result.Value.ExpiresAt,
+                User = result.Value.User
+            });
         }
 
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            throw new NotImplementedException();
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                return BadRequest(new { Error = "Refresh token is required" });
+            }
+            else
+            {
+                var command = new LogoutCommand(refreshToken, GetIpAddress());
+                var result = await _mediator.Send(command);
+
+                if (!result.IsSuccess)
+                    return BadRequest(new {Errors = result.Errors});
+
+                if (result.Value == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError, new { Error = "Unexpected error occurred." });
+
+                Response.Cookies.Delete("refreshToken");
+
+                return Ok(new
+                {
+                    Message = "Logged out successfully"
+                });
+            }
         }
 
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
-            throw new NotImplementedException();
+            var command = new VerifyEmailCommand(request.Token);
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
+                return BadRequest(new { Errors = result.Errors });
+
+            return Ok(new { Message = result.Value.Message });
+        }
+
+        [HttpPost("forget-password")]
+        public async Task<IActionResult> ForgetPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var command = new ForgetPasswordCommand(request.Email);
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
+                return BadRequest(new { Errors = result.Errors });
+
+            return Ok(new { Message = result.Value.Message });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var command = new ResetPasswordCommand(request.Token, request.NewPassword);
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
+                return BadRequest(new { Errors = result.Errors });
+
+            return Ok(new { Message = result.Value.Message });
         }
 
         [HttpGet("profile")]
@@ -144,4 +219,5 @@ namespace Bibliotech.API.Controllers
     public record RegisterRequest(string Email, string Password, string FirstName, string LastName);
     public record LoginRequest(string Email, string Password);
     public record VerifyEmailRequest(string Token);
+    public record ResetPasswordRequest(string Token, string NewPassword);
 }
